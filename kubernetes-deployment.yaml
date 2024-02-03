@@ -1,16 +1,17 @@
-FROM jenkins/jenkins:2.176.4
-USER root
-ARG ssh_prv_key
-ARG ssh_pub_key
-# Install kubectl for GKE integration
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.16.0/bin/linux/amd64/kubectl 
-RUN chmod +x ./kubectl 
-RUN mv ./kubectl /usr/local/bin/kubectl
-RUN mkdir -p /root/.ssh && \
-    chmod 0700 /root/.ssh && \
-    ssh-keyscan -p 2022 [host-name] > /root/.ssh/known_hosts
-RUN echo "$ssh_prv_key" > /root/.ssh/id_rsa && \
-    echo "$ssh_pub_key" > /root/.ssh/id_rsa.pub && \
-    chmod 600 /root/.ssh/id_rsa && \
-    chmod 600 /root/.ssh/id_rsa.pub
-USER jenkins
+spec:
+  containers:
+  - name: mycontainer
+    image: myimage
+    env:
+      - name: MY_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: actuator-token
+            key: token
+    livenessProbe:
+        httpGet:
+          path: test/actuator/health
+          port: 9001
+          httpHeaders:
+          - name: Authorization
+            value: $SECRET
